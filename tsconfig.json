@@ -6,7 +6,10 @@
     "outDir": "dist",
     "rootDir": "src",
     "strict": true,
-    "skipLibCheck": true
+    "skipLibCheck": true,
+    "allowJs": true,
+    "checkJs": false,
+    "noEmit": true
   },
-  "include": ["src"]
+  "include": ["src/**/*","src"]
 }
