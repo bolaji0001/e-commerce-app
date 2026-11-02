@@ -1,4 +1,4 @@
-import { pool } from "./pool";
+import { pool } from "./pool.js";
 
 const products = [
   { slug: "everyday-backpack", name: "Everyday Backpack", description: "Water-resistant 20L backpack with a laptop sleeve.", price_cents: 5900, stock: 40 },

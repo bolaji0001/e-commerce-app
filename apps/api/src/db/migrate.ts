@@ -1,6 +1,6 @@
 import fs from "node:fs";
 import path from "node:path";
-import { pool } from "./pool";
+import { pool } from "./pool.js";
 
 async function main() {
   await pool.query(`

@@ -1,10 +1,8 @@
 import "dotenv/config";
 import express from "express";
 import cors from "cors";
-import { pool } from "./db/pool";
-import { productsRouter } from "./routes/products";
-
-const app = express();
+import { pool } from "./db/pool.js";
+import { productsRouter } from "./routes/products.js";
 app.use(cors({ origin: process.env.CORS_ORIGIN ?? "http://localhost:5173" }));
 app.use(express.json());
 
