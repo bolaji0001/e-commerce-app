@@ -10,7 +10,7 @@ async function main() {
     )
   `);
 
-  const dir = path.join(__dirname, "../../migrations");
+  const dir = path.join(import.meta.dirname, "../../migrations");
   const files = fs.readdirSync(dir).filter((f) => f.endsWith(".sql")).sort();
   console.log(`found ${files.length} migration file(s)`);
 
