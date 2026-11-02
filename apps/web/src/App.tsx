@@ -1,19 +1,24 @@
-import { useEffect, useState } from "react";
+import { Link, Route, Routes } from "react-router-dom";
+import ProductsPage from "./pages/ProductsPage";
+import ProductPage from "./pages/ProductPage";
 
 export default function App() {
-  const [status, setStatus] = useState("checking...");
-
-  useEffect(() => {
-    fetch(`${import.meta.env.VITE_API_URL}/health`)
-      .then((r) => r.json())
-      .then((d) => setStatus(`API: ${d.status}, DB: ${d.db}`))
-      .catch(() => setStatus("API unreachable"));
-  }, []);
-
   return (
-    <main className="mx-auto max-w-3xl p-8">
-      <h1 className="text-3xl font-bold">My Store</h1>
-      <p className="mt-4 text-gray-600">{status}</p>
-    </main>
+    <div className="min-h-screen bg-gray-50 text-gray-900">
+      <header className="border-b bg-white">
+        <div className="mx-auto flex max-w-5xl items-center justify-between p-4">
+          <Link to="/" className="text-xl font-bold">
+            My Store
+          </Link>
+        </div>
+      </header>
+      <main className="mx-auto max-w-5xl p-4 md:p-8">
+        <Routes>
+          <Route path="/" element={<ProductsPage />} />
+          <Route path="/products/:id" element={<ProductPage />} />
+          <Route path="*" element={<p>Page not found.</p>} />
+        </Routes>
+      </main>
+    </div>
   );
 }

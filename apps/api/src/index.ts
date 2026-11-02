@@ -1,13 +1,12 @@
 import "dotenv/config";
 import express from "express";
 import cors from "cors";
-import { Pool } from "pg";
+import { pool } from "./db/pool";
+import { productsRouter } from "./routes/products";
 
 const app = express();
 app.use(cors({ origin: process.env.CORS_ORIGIN ?? "http://localhost:5173" }));
 app.use(express.json());
-
-const pool = new Pool({ connectionString: process.env.DATABASE_URL });
 
 app.get("/health", async (_req, res) => {
   try {
@@ -17,6 +16,8 @@ app.get("/health", async (_req, res) => {
     res.status(500).json({ status: "error", db: "down" });
   }
 });
+
+app.use("/products", productsRouter);
 
 const port = Number(process.env.PORT ?? 4000);
 app.listen(port, () => console.log(`API listening on port ${port}`));
