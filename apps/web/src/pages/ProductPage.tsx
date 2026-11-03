@@ -1,10 +1,12 @@
 import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
+import { useCart } from "../cart/useCart";
 import { formatPrice, getProduct } from "../lib/api";
 import type { Product } from "../lib/api";
 
 export default function ProductPage() {
   const { id } = useParams();
+  const { items, addItem } = useCart();
   const [product, setProduct] = useState<Product | null>(null);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(true);
@@ -25,6 +27,9 @@ export default function ProductPage() {
       });
     return () => controller.abort();
   }, [id]);
+
+  const inCart = product ? (items.find((i) => i.productId === product.id)?.quantity ?? 0) : 0;
+  const atMax = product ? inCart >= product.stock : false;
 
   return (
     <div>
@@ -47,13 +52,31 @@ export default function ProductPage() {
             <p className="mt-2 text-sm text-gray-500">
               {product.stock > 0 ? `${product.stock} in stock` : "Out of stock"}
             </p>
+
             <button
-              disabled
-              className="mt-6 rounded-lg bg-gray-300 px-6 py-3 font-semibold text-gray-600"
-              title="Cart comes on Day 4"
+              onClick={() =>
+                addItem({
+                  productId: product.id,
+                  name: product.name,
+                  price_cents: product.price_cents,
+                  image_url: product.image_url,
+                  stock: product.stock,
+                })
+              }
+              disabled={product.stock <= 0 || atMax}
+              className="mt-6 rounded-lg bg-blue-600 px-6 py-3 font-semibold text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:bg-gray-300 disabled:text-gray-600"
             >
-              Add to cart (coming on Day 4)
+              {product.stock <= 0 ? "Out of stock" : atMax ? "Maximum in cart" : "Add to cart"}
             </button>
+
+            {inCart > 0 && (
+              <p className="mt-3 text-sm text-gray-600">
+                {inCart} in your cart.{" "}
+                <Link to="/cart" className="text-blue-600 hover:underline">
+                  View cart
+                </Link>
+              </p>
+            )}
           </div>
         </div>
       )}
