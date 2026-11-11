@@ -1,6 +1,6 @@
 import type { NextFunction, Request, Response } from "express";
-import { verifyToken } from "../auth/token";
-import type { AuthUser } from "../auth/token";
+import { verifyToken } from "../auth/token.js";
+import type { AuthUser } from "../auth/token.js";
 
 declare global {
   namespace Express {

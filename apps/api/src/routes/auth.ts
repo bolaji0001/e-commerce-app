@@ -1,9 +1,10 @@
 import { Router } from "express";
 import bcrypt from "bcryptjs";
 import { z } from "zod";
-import { pool } from "../db/pool";
-import { requireAuth } from "../middleware/auth";
-import { signToken } from "../auth/token";
+import { pool } from "../db/pool.js";
+import { requireAuth } from "../middleware/auth.js";
+import { signToken } from "../auth/token.js";
+import { loginLimiter, registerLimiter } from "../middleware/rateLimit.js";
 
 export const authRouter = Router();
 
@@ -12,7 +13,12 @@ const BCRYPT_ROUNDS = 12;
 const DUMMY_HASH = bcrypt.hashSync("not-a-real-password", BCRYPT_ROUNDS);
 
 const registerSchema = z.object({
-  email: z.string().trim().toLowerCase().email("Enter a valid email address").max(254),
+  email: z
+    .string()
+    .trim()
+    .toLowerCase()
+    .email("Enter a valid email address")
+    .max(254),
   // bcrypt only uses the first 72 bytes, so we cap the length
   password: z
     .string()
@@ -26,10 +32,12 @@ const loginSchema = z.object({
 });
 
 // POST /auth/register
-authRouter.post("/register", async (req, res) => {
+authRouter.post("/register", registerLimiter, async (req, res) => {
   const parsed = registerSchema.safeParse(req.body);
   if (!parsed.success) {
-    return res.status(400).json({ error: parsed.error.issues[0]?.message ?? "Invalid input" });
+    return res
+      .status(400)
+      .json({ error: parsed.error.issues[0]?.message ?? "Invalid input" });
   }
   const { email, password } = parsed.data;
 
@@ -39,7 +47,7 @@ authRouter.post("/register", async (req, res) => {
       `insert into users (email, password_hash)
        values ($1, $2)
        returning id, email, role`,
-      [email, passwordHash]
+      [email, passwordHash],
     );
     const user = result.rows[0];
     const token = signToken({ id: user.id, role: user.role });
@@ -47,7 +55,9 @@ authRouter.post("/register", async (req, res) => {
   } catch (err) {
     // 23505 = unique violation (email already registered)
     if ((err as { code?: string }).code === "23505") {
-      return res.status(409).json({ error: "An account with this email already exists" });
+      return res
+        .status(409)
+        .json({ error: "An account with this email already exists" });
     }
     console.error(err);
     res.status(500).json({ error: "Could not create account" });
@@ -55,17 +65,19 @@ authRouter.post("/register", async (req, res) => {
 });
 
 // POST /auth/login
-authRouter.post("/login", async (req, res) => {
+authRouter.post("/login", loginLimiter, async (req, res) => {
   const parsed = loginSchema.safeParse(req.body);
   if (!parsed.success) {
-    return res.status(400).json({ error: parsed.error.issues[0]?.message ?? "Invalid input" });
+    return res
+      .status(400)
+      .json({ error: parsed.error.issues[0]?.message ?? "Invalid input" });
   }
   const { email, password } = parsed.data;
 
   try {
     const result = await pool.query(
       "select id, email, role, password_hash from users where email = $1",
-      [email]
+      [email],
     );
     const row = result.rows[0];
     // Always run a comparison so a missing account takes about as long as a wrong password
@@ -85,7 +97,10 @@ authRouter.post("/login", async (req, res) => {
 // GET /auth/me  (needs a valid token)
 authRouter.get("/me", requireAuth, async (req, res) => {
   try {
-    const result = await pool.query("select id, email, role from users where id = $1", [req.user!.id]);
+    const result = await pool.query(
+      "select id, email, role from users where id = $1",
+      [req.user!.id],
+    );
     if (result.rowCount === 0) {
       return res.status(404).json({ error: "User not found" });
     }
