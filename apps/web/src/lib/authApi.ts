@@ -3,7 +3,7 @@ const API = import.meta.env.VITE_API_URL;
 export type User = { id: string; email: string; role: "customer" | "admin" };
 export type AuthResponse = { token: string; user: User };
 
-async function request<T>(
+export async function request<T>(
   path: string,
   options: { method?: string; body?: unknown; token?: string } = {}
 ): Promise<T> {

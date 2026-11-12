@@ -1,9 +1,34 @@
-import { Link } from "react-router-dom";
+import { useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import { useAuth } from "../auth/useAuth";
 import { useCart } from "../cart/useCart";
 import { formatPrice } from "../lib/api";
+import { createOrder } from "../lib/ordersApi";
 
 export default function CartPage() {
   const { items, subtotal_cents, setQuantity, removeItem, clear } = useCart();
+  const { user, token } = useAuth();
+  const navigate = useNavigate();
+  const [placing, setPlacing] = useState(false);
+  const [error, setError] = useState("");
+
+  async function placeOrder() {
+    if (!token) return;
+    setPlacing(true);
+    setError("");
+    try {
+      await createOrder(
+        token,
+        items.map((i) => ({ productId: i.productId, quantity: i.quantity }))
+      );
+      clear();
+      navigate("/orders");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Could not place order");
+    } finally {
+      setPlacing(false);
+    }
+  }
 
   if (items.length === 0) {
     return (
@@ -40,7 +65,7 @@ export default function CartPage() {
                 aria-label={`Decrease quantity of ${item.name}`}
                 className="h-8 w-8 rounded border"
               >
-                −
+                -
               </button>
               <span className="w-6 text-center" aria-live="polite">
                 {item.quantity}
@@ -57,17 +82,14 @@ export default function CartPage() {
 
             <p className="w-24 text-right font-semibold">{formatPrice(item.price_cents * item.quantity)}</p>
 
-            <button
-              onClick={() => removeItem(item.productId)}
-              className="text-sm text-red-600 hover:underline"
-            >
+            <button onClick={() => removeItem(item.productId)} className="text-sm text-red-600 hover:underline">
               Remove
             </button>
           </li>
         ))}
       </ul>
 
-      <div className="mt-6 flex flex-wrap items-center justify-between gap-4">
+      <div className="mt-6 flex flex-wrap items-start justify-between gap-4">
         <button onClick={clear} className="text-sm text-gray-600 hover:underline">
           Clear cart
         </button>
@@ -75,14 +97,31 @@ export default function CartPage() {
           <p className="text-lg">
             Subtotal: <span className="font-bold">{formatPrice(subtotal_cents)}</span>
           </p>
-          <p className="text-sm text-gray-500">Taxes and shipping are added at checkout.</p>
-          <button
-            disabled
-            className="mt-3 rounded-lg bg-gray-300 px-6 py-3 font-semibold text-gray-600"
-            title="Checkout comes on Day 8"
-          >
-            Checkout (coming Day 8)
-          </button>
+          <p className="text-sm text-gray-500">The final total is calculated by the server.</p>
+
+          {user ? (
+            <button
+              onClick={placeOrder}
+              disabled={placing}
+              className="mt-3 rounded-lg bg-blue-600 px-6 py-3 font-semibold text-white hover:bg-blue-700 disabled:bg-gray-300"
+            >
+              {placing ? "Placing order..." : "Place order (test)"}
+            </button>
+          ) : (
+            <Link
+              to="/login"
+              state={{ from: "/cart" }}
+              className="mt-3 inline-block rounded-lg bg-blue-600 px-6 py-3 font-semibold text-white hover:bg-blue-700"
+            >
+              Log in to place your order
+            </Link>
+          )}
+
+          {error && (
+            <p role="alert" className="mt-3 text-sm text-red-600">
+              {error}
+            </p>
+          )}
         </div>
       </div>
     </div>

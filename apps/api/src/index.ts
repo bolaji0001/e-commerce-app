@@ -3,9 +3,11 @@ import express from "express";
 import cors from "cors";
 import { pool } from "./db/pool.js";
 import { authRouter } from "./routes/auth.js";
+import { ordersRouter } from "./routes/orders.js";
 import { productsRouter } from "./routes/products.js";
 
 const app = express();
+app.set("trust proxy", 1);
 app.use(cors({ origin: process.env.CORS_ORIGIN ?? "http://localhost:5173" }));
 app.use(express.json());
 
@@ -20,6 +22,7 @@ app.get("/health", async (_req, res) => {
 
 app.use("/auth", authRouter);
 app.use("/products", productsRouter);
+app.use("/orders", ordersRouter);
 
 const port = Number(process.env.PORT ?? 4000);
 app.listen(port, () => console.log(`API listening on port ${port}`));

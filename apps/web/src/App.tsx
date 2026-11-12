@@ -5,6 +5,7 @@ import ProtectedRoute from "./components/ProtectedRoute";
 import AccountPage from "./pages/AccountPage";
 import AuthPage from "./pages/AuthPage";
 import CartPage from "./pages/CartPage";
+import OrdersPage from "./pages/OrdersPage";
 import ProductPage from "./pages/ProductPage";
 import ProductsPage from "./pages/ProductsPage";
 
@@ -25,6 +26,9 @@ export default function App() {
             </Link>
             {!loading && user && (
               <>
+                <Link to="/orders" className="hover:underline">
+                  Orders
+                </Link>
                 <Link to="/account" className="hover:underline">
                   Account
                 </Link>
@@ -55,6 +59,7 @@ export default function App() {
           <Route path="/register" element={<AuthPage mode="register" />} />
           <Route element={<ProtectedRoute />}>
             <Route path="/account" element={<AccountPage />} />
+            <Route path="/orders" element={<OrdersPage />} />
           </Route>
           <Route path="*" element={<p>Page not found.</p>} />
         </Routes>
